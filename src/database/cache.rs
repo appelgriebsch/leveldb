@@ -24,7 +24,9 @@ impl Cache {
     /// Create a leveldb LRU cache of a given size
     pub fn new(size: size_t) -> Cache {
         let cache = unsafe { leveldb_cache_create_lru(size) };
-        Cache { raw: RawCache { ptr: cache } }
+        Cache {
+            raw: RawCache { ptr: cache },
+        }
     }
 
     #[allow(missing_docs)]

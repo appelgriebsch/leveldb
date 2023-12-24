@@ -1,7 +1,7 @@
 //! The module defining custom leveldb error type.
 
-use libc::{c_void, c_char};
 use cruzbit_leveldb_sys::leveldb_free;
+use libc::{c_char, c_void};
 use std;
 
 /// A leveldb error, just containing the error string
@@ -22,10 +22,12 @@ impl Error {
     /// This method is `unsafe` because the pointer must be valid and point to heap.
     /// The pointer will be passed to `free`!
     pub unsafe fn new_from_char(message: *const c_char) -> Error {
-        use std::str::from_utf8;
         use std::ffi::CStr;
+        use std::str::from_utf8;
 
-        let err_string = from_utf8(CStr::from_ptr(message).to_bytes()).unwrap().to_string();
+        let err_string = from_utf8(CStr::from_ptr(message).to_bytes())
+            .unwrap()
+            .to_string();
         leveldb_free(message as *mut c_void);
         Error::new(err_string)
     }

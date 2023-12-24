@@ -1,10 +1,10 @@
-use libc::{c_char, size_t, c_void};
-use std::{slice, ptr};
-use super::options::{WriteOptions, c_writeoptions};
-use super::error::Error;
 use super::db::Database;
+use super::error::Error;
 use super::key::IntoLevelDBKey;
+use super::options::{c_writeoptions, WriteOptions};
 use cruzbit_leveldb_sys::*;
+use libc::{c_char, c_void, size_t};
+use std::{ptr, slice};
 
 pub(crate) struct RawWriteBatch {
     pub(crate) ptr: *mut leveldb_writebatch_t,
@@ -38,7 +38,7 @@ impl Batch for Database {
                 self.database.ptr,
                 c_write_options,
                 batch.write_batch.ptr,
-                &mut error
+                &mut error,
             );
 
             if error == ptr::null_mut() {
@@ -55,9 +55,7 @@ impl WriteBatch {
         let ptr = unsafe { leveldb_writebatch_create() };
         let raw = RawWriteBatch { ptr };
 
-        WriteBatch {
-            write_batch: raw,
-        }
+        WriteBatch { write_batch: raw }
     }
 
     /// Clear the writebatch
@@ -74,14 +72,15 @@ impl WriteBatch {
         });
     }
 
-
     pub fn put_u8(&self, key: &[u8], value: &[u8]) {
         unsafe {
-            leveldb_writebatch_put(self.write_batch.ptr,
-                                   key.as_ptr() as *mut c_char,
-                                   key.len() as size_t,
-                                   value.as_ptr() as *mut c_char,
-                                   value.len() as size_t);
+            leveldb_writebatch_put(
+                self.write_batch.ptr,
+                key.as_ptr() as *mut c_char,
+                key.len() as size_t,
+                value.as_ptr() as *mut c_char,
+                value.len() as size_t,
+            );
         }
     }
 
@@ -96,9 +95,11 @@ impl WriteBatch {
 
     pub fn delete_u8(&self, key: &[u8]) {
         unsafe {
-            leveldb_writebatch_delete(self.write_batch.ptr,
-                                      key.as_ptr() as *mut c_char,
-                                      key.len() as size_t);
+            leveldb_writebatch_delete(
+                self.write_batch.ptr,
+                key.as_ptr() as *mut c_char,
+                key.len() as size_t,
+            );
         }
     }
 
@@ -106,10 +107,12 @@ impl WriteBatch {
     pub fn iterate<T: WriteBatchIterator>(&mut self, iterator: Box<T>) -> Box<T> {
         unsafe {
             let iter = Box::into_raw(iterator);
-            leveldb_writebatch_iterate(self.write_batch.ptr,
-                                       iter as *mut c_void,
-                                       put_callback::<T>,
-                                       deleted_callback::<T>);
+            leveldb_writebatch_iterate(
+                self.write_batch.ptr,
+                iter as *mut c_void,
+                put_callback::<T>,
+                deleted_callback::<T>,
+            );
             Box::from_raw(iter)
         }
     }
@@ -129,8 +132,8 @@ extern "C" fn put_callback<T: WriteBatchIterator>(
     key: *const c_char,
     key_len: size_t,
     val: *const c_char,
-    val_len: size_t) {
-
+    val_len: size_t,
+) {
     unsafe {
         let iter: &mut T = &mut *(state as *mut T);
         let key_slice = slice::from_raw_parts::<u8>(key as *const u8, key_len as usize);
@@ -143,7 +146,7 @@ extern "C" fn put_callback<T: WriteBatchIterator>(
 extern "C" fn deleted_callback<T: WriteBatchIterator>(
     state: *mut c_void,
     key: *const c_char,
-    key_len: size_t
+    key_len: size_t,
 ) {
     unsafe {
         let iter: &mut T = &mut *(state as *mut T);

@@ -1,8 +1,8 @@
-use leveldb::options::{Options, WriteOptions, ReadOptions};
 use leveldb::db::Database;
 use leveldb::error::Error;
-use leveldb::util::FromU8;
 use leveldb::iterator::Iterable;
+use leveldb::options::{Options, ReadOptions, WriteOptions};
+use leveldb::util::FromU8;
 use std::path::Path;
 
 fn main() -> Result<(), Error> {
@@ -71,7 +71,7 @@ fn main() -> Result<(), Error> {
     let mut key_and_values = vec![("name", "tom"), ("age", "5"), ("from", "mars")];
     key_and_values.sort();
 
-    for entry in  iter.enumerate() {
+    for entry in iter.enumerate() {
         let (i, (key, value)) = entry;
         let key_str = String::from_utf8_lossy(key.as_slice());
         let value_str = String::from_utf8_lossy(value.as_slice());
@@ -81,7 +81,6 @@ fn main() -> Result<(), Error> {
         assert_eq!(*expected_key, &key_str.to_string());
         assert_eq!(*expected_value, &value_str.to_string());
     }
-
 
     Ok(())
 }

@@ -54,14 +54,14 @@ pub struct Options {
 impl std::fmt::Debug for Options {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("")
-         .field(&self.create_if_missing)
+            .field(&self.create_if_missing)
             .field(&self.error_if_exists)
             .field(&self.paranoid_checks)
             .field(&self.write_buffer_size)
             .field(&self.max_open_files)
             .field(&self.block_size)
             .field(&self.block_restart_interval)
-         .finish()
+            .finish()
     }
 }
 
@@ -100,7 +100,7 @@ impl WriteOptions {
 
 /// The read options to use for any read operation.
 #[derive(Copy, Clone, Debug)]
-pub struct ReadOptions  {
+pub struct ReadOptions {
     /// Whether to verify the saved checksums on read.
     ///
     /// default: false
@@ -122,11 +122,11 @@ impl ReadOptions {
     }
 }
 
-
 #[allow(missing_docs)]
-pub unsafe fn c_options(options: &Options,
-                        comparator: Option<*mut leveldb_comparator_t>)
-                        -> *mut leveldb_options_t {
+pub unsafe fn c_options(
+    options: &Options,
+    comparator: Option<*mut leveldb_comparator_t>,
+) -> *mut leveldb_options_t {
     let c_options = leveldb_options_create();
     leveldb_options_set_create_if_missing(c_options, options.create_if_missing as u8);
     leveldb_options_set_error_if_exists(c_options, options.error_if_exists as u8);

@@ -4,14 +4,14 @@
 //! point in time and won't change while you work with them.
 use cruzbit_leveldb_sys::*;
 
+use super::bytes::Bytes;
 use super::db::Database;
 use super::error::Error;
-use super::options::{ReadOptions, c_readoptions};
-use super::key::IntoLevelDBKey;
 use super::iterator::{Iterable, Iterator, KeyIterator, ValueIterator};
-use super::bytes::Bytes;
-use std::ptr;
+use super::key::IntoLevelDBKey;
+use super::options::{c_readoptions, ReadOptions};
 use libc::{c_char, size_t};
+use std::ptr;
 
 #[allow(missing_docs)]
 struct RawSnapshot {
@@ -34,28 +34,22 @@ pub struct Snapshot<'a> {
     database: &'a Database,
 }
 
-
 impl<'a> Snapshot<'a> {
     /// fetches a key from the database
     ///
     /// Inserts this snapshot into ReadOptions before reading
 
-    pub fn get(&self,
-                  options: &ReadOptions,
-                  key: &dyn IntoLevelDBKey)
-                  -> Result<Option<Vec<u8>>, Error> {
-        key.as_u8_slice_for_get(& |k| {
-            self.get_u8(options, k)
-        })
+    pub fn get(
+        &self,
+        options: &ReadOptions,
+        key: &dyn IntoLevelDBKey,
+    ) -> Result<Option<Vec<u8>>, Error> {
+        key.as_u8_slice_for_get(&|k| self.get_u8(options, k))
     }
-
 
     /// override the get_u8 of Database. Overriding is for avoiding the snapshot field of ReadOption,
     /// if so, a lifetime parameter must be added for ReadOption.
-    pub fn get_u8(&self,
-               options: &ReadOptions,
-               key: &[u8])
-               -> Result<Option<Vec<u8>>, Error> {
+    pub fn get_u8(&self, options: &ReadOptions, key: &[u8]) -> Result<Option<Vec<u8>>, Error> {
         unsafe {
             let mut error = ptr::null_mut();
             let mut length: size_t = 0;
@@ -64,24 +58,25 @@ impl<'a> Snapshot<'a> {
             // add the extra snapshot information to c_readoptions
             leveldb_readoptions_set_snapshot(c_readoptions, self.raw_ptr());
 
-            let result = leveldb_get(self.database.database.ptr,
-                                     c_readoptions,
-                                     key.as_ptr() as *mut c_char,
-                                     key.len() as size_t,
-                                     &mut length,
-                                     &mut error);
+            let result = leveldb_get(
+                self.database.database.ptr,
+                c_readoptions,
+                key.as_ptr() as *mut c_char,
+                key.len() as size_t,
+                &mut length,
+                &mut error,
+            );
 
             leveldb_readoptions_destroy(c_readoptions);
 
             if error == ptr::null_mut() {
                 let bytes_opt = Bytes::from_raw(result as *mut u8, length);
 
-                Ok(bytes_opt.map(|val| {val.into()}))
+                Ok(bytes_opt.map(|val| val.into()))
             } else {
                 Err(Error::new_from_char(error))
             }
         }
-
     }
 
     #[inline]
@@ -102,9 +97,7 @@ pub trait Snapshots {
 impl Snapshots for Database {
     fn snapshot(&self) -> Snapshot {
         let db_str = self.database.ptr;
-        let snap = unsafe {
-            leveldb_create_snapshot(db_str)
-        };
+        let snap = unsafe { leveldb_create_snapshot(db_str) };
 
         let raw = RawSnapshot {
             db_ptr: db_str,
@@ -113,7 +106,7 @@ impl Snapshots for Database {
 
         Snapshot {
             raw,
-            database: self
+            database: self,
         }
     }
 }
@@ -127,8 +120,7 @@ impl<'a> Iterable<'a> for Snapshot<'a> {
         KeyIterator::new(self.database, options, Some(self))
     }
 
-    fn value_iter(&'a self, options: &ReadOptions)-> ValueIterator<'a> {
+    fn value_iter(&'a self, options: &ReadOptions) -> ValueIterator<'a> {
         ValueIterator::new(self.database, options, Some(self))
     }
 }
-

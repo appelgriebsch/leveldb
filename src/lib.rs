@@ -3,17 +3,17 @@
 
 pub mod database;
 
-pub use database::options;
-pub use database::error;
-pub use database::snapshots;
-pub use database::db;
-pub use database::cache;
-pub use database::management;
-pub use database::iterator;
 pub use database::batch;
+pub use database::cache;
 pub use database::compaction;
 pub use database::comparator;
+pub use database::db;
+pub use database::error;
+pub use database::iterator;
 pub use database::key;
+pub use database::management;
+pub use database::options;
+pub use database::snapshots;
 pub use database::util;
 
 use cruzbit_leveldb_sys::{leveldb_major_version, leveldb_minor_version};

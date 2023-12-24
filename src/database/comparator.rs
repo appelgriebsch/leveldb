@@ -4,10 +4,10 @@
 //! Comparators allow to override this comparison.
 //! The ordering of keys introduced by the comparator influences iteration order.
 //! Databases written with one Comparator cannot be opened with another.
-use libc::{size_t, c_void, c_char};
-use std::slice;
 use cruzbit_leveldb_sys::*;
+use libc::{c_char, c_void, size_t};
 use std::cmp::Ordering;
+use std::slice;
 
 /// A comparator has two important functions:
 ///
@@ -29,10 +29,13 @@ pub trait Comparator {
 }
 
 /// DefaultComparator is the a stand in for "no comparator set"
-#[derive(Copy,Clone)]
+#[derive(Copy, Clone)]
 pub struct DefaultComparator;
 
-unsafe trait InternalComparator: Comparator where Self: Sized {
+unsafe trait InternalComparator: Comparator
+where
+    Self: Sized,
+{
     extern "C" fn name(state: *mut c_void) -> *const c_char {
         let x = unsafe { &*(state as *mut Self) };
         x.name()
@@ -43,7 +46,7 @@ unsafe trait InternalComparator: Comparator where Self: Sized {
         a: *const c_char,
         a_len: size_t,
         b: *const c_char,
-        b_len: size_t
+        b_len: size_t,
     ) -> i32 {
         unsafe {
             let a_slice = slice::from_raw_parts::<u8>(a as *const u8, a_len as usize);
@@ -66,14 +69,15 @@ unsafe trait InternalComparator: Comparator where Self: Sized {
 
 unsafe impl<C: Comparator> InternalComparator for C {}
 
-
 #[allow(missing_docs)]
 pub fn create_comparator<T: Comparator>(x: Box<T>) -> *mut leveldb_comparator_t {
     unsafe {
-        leveldb_comparator_create(Box::into_raw(x) as *mut c_void,
-                                  <T as InternalComparator>::destructor,
-                                  <T as InternalComparator>::compare,
-                                  <T as InternalComparator>::name)
+        leveldb_comparator_create(
+            Box::into_raw(x) as *mut c_void,
+            <T as InternalComparator>::destructor,
+            <T as InternalComparator>::compare,
+            <T as InternalComparator>::name,
+        )
     }
 }
 

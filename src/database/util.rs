@@ -1,23 +1,22 @@
-pub trait FromU8{
+pub trait FromU8 {
     fn from_u8(data: &[u8]) -> Self;
 }
 
-
 macro_rules! impl_from_u8_for_int {
     ($T: ty, $N: expr) => {
-     impl FromU8 for $T {
-         fn from_u8(data: &[u8]) -> $T {
-             assert_eq!(data.len(), $N);
+        impl FromU8 for $T {
+            fn from_u8(data: &[u8]) -> $T {
+                assert_eq!(data.len(), $N);
 
-             let mut value: $T = 0;
+                let mut value: $T = 0;
 
-             for i in 0..$N {
-                 value |= (data[i] as $T) << 8 * ($N - i - 1);
-             }
+                for i in 0..$N {
+                    value |= (data[i] as $T) << 8 * ($N - i - 1);
+                }
 
-             value
-         }
-     }
+                value
+            }
+        }
     };
 }
 

@@ -2,14 +2,14 @@
 //!
 //! Iteration is one of the most important parts of leveldb. This module provides
 //! Iterators to iterate over key, values and pairs of both.
-use libc::{size_t, c_char};
-use std::iter;
+use super::options::{c_readoptions, ReadOptions};
 use super::Database;
-use super::options::{ReadOptions, c_readoptions};
-use std::slice::from_raw_parts;
-use std::marker::PhantomData;
 use crate::database::snapshots::Snapshot;
 use cruzbit_leveldb_sys::*;
+use libc::{c_char, size_t};
+use std::iter;
+use std::marker::PhantomData;
+use std::slice::from_raw_parts;
 
 #[allow(missing_docs)]
 struct RawIterator {
@@ -206,13 +206,21 @@ pub trait LevelDBIterator<'a> {
 
     fn seek(&self, key: &[u8]) {
         unsafe {
-            leveldb_iter_seek(self.raw_iterator(), key.as_ptr() as *mut c_char, key.len() as size_t);
+            leveldb_iter_seek(
+                self.raw_iterator(),
+                key.as_ptr() as *mut c_char,
+                key.len() as size_t,
+            );
         }
     }
 }
 
 impl<'a> Iterator<'a> {
-    pub fn new(database: &'a Database, options: &ReadOptions, snapshot: Option<&'a Snapshot>) -> Iterator<'a> {
+    pub fn new(
+        database: &'a Database,
+        options: &ReadOptions,
+        snapshot: Option<&'a Snapshot>,
+    ) -> Iterator<'a> {
         unsafe {
             let c_read_options = c_readoptions(options);
 
@@ -380,8 +388,14 @@ impl<'a> LevelDBIterator<'a> for RevIterator<'a> {
 }
 
 impl<'a> KeyIterator<'a> {
-    pub fn new(database: &'a Database, options: &ReadOptions, snapshot: Option<&'a Snapshot>) -> KeyIterator<'a> {
-        KeyIterator { inner: Iterator::new(database, options, snapshot) }
+    pub fn new(
+        database: &'a Database,
+        options: &ReadOptions,
+        snapshot: Option<&'a Snapshot>,
+    ) -> KeyIterator<'a> {
+        KeyIterator {
+            inner: Iterator::new(database, options, snapshot),
+        }
     }
 
     /// return the last element of the iterator
@@ -392,8 +406,14 @@ impl<'a> KeyIterator<'a> {
 }
 
 impl<'a> ValueIterator<'a> {
-    pub fn new(database: &'a Database, options: &ReadOptions, snapshot: Option<&'a Snapshot>) -> ValueIterator<'a> {
-        ValueIterator { inner: Iterator::new(database, options, snapshot) }
+    pub fn new(
+        database: &'a Database,
+        options: &ReadOptions,
+        snapshot: Option<&'a Snapshot>,
+    ) -> ValueIterator<'a> {
+        ValueIterator {
+            inner: Iterator::new(database, options, snapshot),
+        }
     }
 
     /// return the last element of the iterator

@@ -1,7 +1,7 @@
-use leveldb::database::Database;
-use leveldb::options::{Options ,ReadOptions, WriteOptions};
 use leveldb::database::batch::{Batch, WriteBatch};
+use leveldb::database::Database;
 use leveldb::error::Error;
+use leveldb::options::{Options, ReadOptions, WriteOptions};
 use std::path::Path;
 
 fn main() -> Result<(), Error> {
@@ -21,7 +21,7 @@ fn main() -> Result<(), Error> {
 
     database.write(&write_ops, &batch)?;
 
-    let  value = database.get(&read_ops, &3)?;
+    let value = database.get(&read_ops, &3)?;
     assert!(value.is_some());
     assert_eq!(value.unwrap().as_slice(), &[3u8][..]);
 
