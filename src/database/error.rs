@@ -1,7 +1,7 @@
 //! The module defining custom leveldb error type.
 
 use libc::{c_void, c_char};
-use leveldb_sys::leveldb_free;
+use cruzbit_leveldb_sys::leveldb_free;
 use std;
 
 /// A leveldb error, just containing the error string

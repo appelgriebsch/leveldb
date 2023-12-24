@@ -1,10 +1,10 @@
-use leveldb_sys::*;
 use libc::{c_char, size_t, c_void};
 use std::{slice, ptr};
 use super::options::{WriteOptions, c_writeoptions};
 use super::error::Error;
 use super::db::Database;
 use super::key::IntoLevelDBKey;
+use cruzbit_leveldb_sys::*;
 
 pub(crate) struct RawWriteBatch {
     pub(crate) ptr: *mut leveldb_writebatch_t,

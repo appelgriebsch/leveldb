@@ -1,4 +1,4 @@
-use leveldb_sys::*;
+use cruzbit_leveldb_sys::*;
 
 use libc::size_t;
 

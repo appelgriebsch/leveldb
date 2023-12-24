@@ -16,8 +16,7 @@ pub use database::comparator;
 pub use database::key;
 pub use database::util;
 
-use leveldb_sys::{leveldb_major_version, leveldb_minor_version};
-
+use cruzbit_leveldb_sys::{leveldb_major_version, leveldb_minor_version};
 
 /// Library version information
 ///

@@ -1,26 +1,29 @@
 [package]
-name = "rs-leveldb"
-version = "0.1.5"
-authors = ["fetchadd <kaizengliu@qq.com>"]
-edition = "2018"
-license = "MIT"
+name = "cruzbit-leveldb"
+version = "1.0.0"
+authors = [ "Christian Smith <christian@dhp.com" ]
+edition = "2021"
+rust-version = "1.57.0"
+description = "An interface for leveldb"
 readme = "README.md"
-description = "Almost-complete bindings for leveldb for Rust."
-homepage = "https://github.com/fetchadd/leveldb"
-repository = "https://github.com/fetchadd/leveldb"
-
-keywords = ["leveldb"]
+homepage = "https://github.com/christian-smith/cruzbit-leveldb"
+repository = "https://github.com/christian-smith/cruzbit-leveldb"
+license = "MIT"
+autotests = false
 
 [lib]
 name = "leveldb"
-path = "src/lib.rs"
 
-[dependencies]
-libc = "0.2.4"
-leveldb-sys = "2.0.0"
-
-[dev-dependencies]
-tempdir = "0.3.4"
+[[test]]
+name = "tests"
 
 [features]
-default = ["leveldb-sys/snappy"]
+default = ["cruzbit-leveldb-sys/snappy"]
+
+[dependencies]
+libc = "0.2"
+cruzbit-leveldb-sys = "1.0"
+
+[dev-dependencies]
+tempdir = "0.3"
+

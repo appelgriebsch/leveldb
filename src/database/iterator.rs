@@ -2,7 +2,6 @@
 //!
 //! Iteration is one of the most important parts of leveldb. This module provides
 //! Iterators to iterate over key, values and pairs of both.
-use leveldb_sys::*;
 use libc::{size_t, c_char};
 use std::iter;
 use super::Database;
@@ -10,6 +9,7 @@ use super::options::{ReadOptions, c_readoptions};
 use std::slice::from_raw_parts;
 use std::marker::PhantomData;
 use crate::database::snapshots::Snapshot;
+use cruzbit_leveldb_sys::*;
 
 #[allow(missing_docs)]
 struct RawIterator {

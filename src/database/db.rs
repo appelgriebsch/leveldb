@@ -1,4 +1,3 @@
-use leveldb_sys::*;
 use std::ffi::CString;
 use libc::{c_char, size_t};
 use super::options::*;
@@ -6,6 +5,7 @@ use super::error::Error;
 use super::bytes::Bytes;
 use super::comparator::{Comparator, create_comparator};
 use super::key::IntoLevelDBKey;
+use cruzbit_leveldb_sys::*;
 use std::path::Path;
 use std::ptr;
 
