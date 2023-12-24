@@ -28,11 +28,14 @@ impl Drop for RawIterator {
 /// Returns key and value as a tuple.
 pub struct Iterator<'a> {
     iter: RawIterator,
+    start: bool,
     // Iterator accesses the Database through a leveldb_iter_t pointer
     // but needs to hold the reference for lifetime tracking
     #[allow(dead_code)]
     database: PhantomData<&'a Database>,
-
+    from: Option<&'a [u8]>,
+    to: Option<&'a [u8]>,
+    prefix: Option<&'a [u8]>,
 }
 
 /// An iterator over the leveldb keyspace  that browses the keys backwards.
@@ -40,10 +43,14 @@ pub struct Iterator<'a> {
 /// Returns key and value as a tuple.
 pub struct RevIterator<'a> {
     iter: RawIterator,
+    start: bool,
     // Iterator accesses the Database through a leveldb_iter_t pointer
     // but needs to hold the reference for lifetime tracking
     #[allow(dead_code)]
     database: PhantomData<&'a Database>,
+    from: Option<&'a [u8]>,
+    to: Option<&'a [u8]>,
+    prefix: Option<&'a [u8]>,
 }
 
 /// An iterator over the leveldb keyspace.
@@ -103,19 +110,62 @@ pub trait LevelDBIterator<'a> {
 
     fn raw_iterator(&self) -> *mut leveldb_iterator_t;
 
+    fn start(&self) -> bool;
+    fn started(&mut self);
+
     fn reverse(self) -> Self::RevIter;
 
-    fn valid(&self) -> bool {
-        unsafe { leveldb_iter_valid(self.raw_iterator()) != 0 }
+    fn from(self, key: &'a [u8]) -> Self;
+    fn to(self, key: &'a [u8]) -> Self;
+    fn prefix(self, key: &'a [u8]) -> Self;
+
+    fn from_key(&self) -> Option<&'a [u8]>;
+    fn to_key(&self) -> Option<&'a [u8]>;
+    fn prefix_key(&self) -> Option<&'a [u8]>;
+
+    fn valid(&self, reverse: bool) -> bool {
+        if unsafe { leveldb_iter_valid(self.raw_iterator()) != 0 } {
+            if let Some(k) = self.prefix_key() {
+                // match the key with a byte prefix
+                if self.key()[..].starts_with(k) {
+                    return true;
+                }
+            } else if let Some(k) = self.to_key() {
+                // iterate until the 'to' key
+                let comparator: fn(&[u8], &[u8]) -> bool = if reverse {
+                    |a: &[u8], b: &[u8]| -> bool { a >= b }
+                } else {
+                    |a: &[u8], b: &[u8]| -> bool { a <= b }
+                };
+                if comparator(&self.key()[..], k) {
+                    return true;
+                }
+            } else {
+                // if no conditions return we're valid
+                return true;
+            }
+        }
+
+        false
     }
 
-    #[inline]
-    unsafe fn advance_raw(&mut self) {
-        leveldb_iter_next(self.raw_iterator());
-    }
+    unsafe fn advance_raw(&mut self);
 
-    fn advance(&mut self) {
-        unsafe { self.advance_raw(); }
+    fn advance(&mut self, reverse: bool) -> bool {
+        if !self.start() {
+            unsafe {
+                self.advance_raw();
+            }
+        } else {
+            if let Some(k) = self.prefix_key() {
+                self.seek(k)
+            } else if let Some(k) = self.from_key() {
+                self.seek(k)
+            }
+            self.started();
+        }
+
+        self.valid(reverse)
     }
 
     fn key(&self) -> Vec<u8> {
@@ -139,12 +189,18 @@ pub trait LevelDBIterator<'a> {
     }
 
     fn seek_to_first(&self) {
-        unsafe { leveldb_iter_seek_to_first(self.raw_iterator()); }
+        unsafe {
+            leveldb_iter_seek_to_first(self.raw_iterator());
+        }
     }
 
     fn seek_to_last(&self) {
-        unsafe {
+        if let Some(k) = self.to_key() {
+            self.seek(k);
+        } else {
+            unsafe {
                 leveldb_iter_seek_to_last(self.raw_iterator());
+            }
         }
     }
 
@@ -170,8 +226,12 @@ impl<'a> Iterator<'a> {
             leveldb_iter_seek_to_first(ptr);
 
             Iterator {
+                start: true,
                 iter: RawIterator { ptr },
                 database: PhantomData,
+                from: None,
+                to: None,
+                prefix: None,
             }
         }
     }
@@ -191,13 +251,63 @@ impl<'a> LevelDBIterator<'a> for Iterator<'a> {
         self.iter.ptr
     }
 
-    fn reverse(self) -> Self::RevIter {
-        self.seek_to_last();
+    #[inline]
+    fn start(&self) -> bool {
+        self.start
+    }
 
+    #[inline]
+    fn started(&mut self) {
+        self.start = false
+    }
+
+    #[inline]
+    unsafe fn advance_raw(&mut self) {
+        leveldb_iter_next(self.raw_iterator());
+    }
+
+    #[inline]
+    fn reverse(self) -> Self::RevIter {
+        if self.start {
+            unsafe {
+                leveldb_iter_seek_to_last(self.iter.ptr);
+            }
+        }
         RevIterator {
+            start: self.start,
             database: self.database,
             iter: self.iter,
+            from: self.from,
+            to: self.to,
+            prefix: self.prefix,
         }
+    }
+
+    fn from(mut self, key: &'a [u8]) -> Self {
+        self.from = Some(key);
+        self
+    }
+
+    fn to(mut self, key: &'a [u8]) -> Self {
+        self.to = Some(key);
+        self
+    }
+
+    fn prefix(mut self, key: &'a [u8]) -> Self {
+        self.prefix = Some(key);
+        self
+    }
+
+    fn from_key(&self) -> Option<&'a [u8]> {
+        self.from
+    }
+
+    fn to_key(&self) -> Option<&'a [u8]> {
+        self.to
+    }
+
+    fn prefix_key(&self) -> Option<&'a [u8]> {
+        self.prefix
     }
 }
 
@@ -209,18 +319,63 @@ impl<'a> LevelDBIterator<'a> for RevIterator<'a> {
         self.iter.ptr
     }
 
-    fn reverse(self) -> Self::RevIter {
-        self.seek_to_last();
+    #[inline]
+    fn start(&self) -> bool {
+        self.start
+    }
 
-        Iterator {
-            database: self.database,
-            iter: self.iter,
-        }
+    #[inline]
+    fn started(&mut self) {
+        self.start = false
     }
 
     #[inline]
     unsafe fn advance_raw(&mut self) {
         leveldb_iter_prev(self.raw_iterator());
+    }
+
+    #[inline]
+    fn reverse(self) -> Self::RevIter {
+        if self.start {
+            unsafe {
+                leveldb_iter_seek_to_first(self.iter.ptr);
+            }
+        }
+        Iterator {
+            start: self.start,
+            database: self.database,
+            iter: self.iter,
+            from: self.from,
+            to: self.to,
+            prefix: self.prefix,
+        }
+    }
+
+    fn from(mut self, key: &'a [u8]) -> Self {
+        self.from = Some(key);
+        self
+    }
+
+    fn to(mut self, key: &'a [u8]) -> Self {
+        self.to = Some(key);
+        self
+    }
+
+    fn prefix(mut self, key: &'a [u8]) -> Self {
+        self.prefix = Some(key);
+        self
+    }
+
+    fn from_key(&self) -> Option<&'a [u8]> {
+        self.from
+    }
+
+    fn to_key(&self) -> Option<&'a [u8]> {
+        self.to
+    }
+
+    fn prefix_key(&self) -> Option<&'a [u8]> {
+        self.prefix
     }
 }
 
@@ -259,13 +414,52 @@ macro_rules! impl_leveldb_iterator {
             }
 
             #[inline]
+            fn start(&self) -> bool {
+                self.inner.start
+            }
+
+            #[inline]
+            fn started(&mut self) {
+                self.inner.start = false
+            }
+
+            #[inline]
             unsafe fn advance_raw(&mut self) {
                 self.inner.advance_raw();
             }
 
             #[inline]
             fn reverse(self) -> Self::RevIter {
-                Self::RevIter { inner: self.inner.reverse() }
+                Self::RevIter {
+                    inner: self.inner.reverse(),
+                }
+            }
+
+            fn from(mut self, key: &'a [u8]) -> Self {
+                self.inner.from = Some(key);
+                self
+            }
+
+            fn to(mut self, key: &'a [u8]) -> Self {
+                self.inner.to = Some(key);
+                self
+            }
+
+            fn prefix(mut self, key: &'a [u8]) -> Self {
+                self.inner.prefix = Some(key);
+                self
+            }
+
+            fn from_key(&self) -> Option<&'a [u8]> {
+                self.inner.from
+            }
+
+            fn to_key(&self) -> Option<&'a [u8]> {
+                self.inner.to
+            }
+
+            fn prefix_key(&self) -> Option<&'a [u8]> {
+                self.inner.prefix
             }
         }
     };
@@ -277,16 +471,13 @@ impl_leveldb_iterator!(ValueIterator<'a>, RevValueIterator<'a>);
 impl_leveldb_iterator!(RevValueIterator<'a>, ValueIterator<'a>);
 
 macro_rules! impl_iterator {
-    ($T:ty, $Item:ty, $ItemMethod:ident) => {
+    ($T:ty, $Item:ty, $ItemMethod:ident, $Rev:expr) => {
         impl<'a> iter::Iterator for $T {
             type Item = $Item;
 
             fn next(&mut self) -> Option<Self::Item> {
-                if (self.valid()) {
-                    let ret = Some(self.$ItemMethod());
-                    self.advance();
-
-                    ret
+                if self.advance($Rev) {
+                    Some(self.$ItemMethod())
                 } else {
                     None
                 }
@@ -295,9 +486,9 @@ macro_rules! impl_iterator {
     };
 }
 
-impl_iterator!(Iterator<'a>, (Vec<u8>,Vec<u8>), entry);
-impl_iterator!(RevIterator<'a>, (Vec<u8>,Vec<u8>), entry);
-impl_iterator!(KeyIterator<'a>, Vec<u8>, key);
-impl_iterator!(RevKeyIterator<'a>, Vec<u8>, key);
-impl_iterator!(ValueIterator<'a>, Vec<u8>, value);
-impl_iterator!(RevValueIterator<'a>, Vec<u8>, key);
+impl_iterator!(Iterator<'a>, (Vec<u8>, Vec<u8>), entry, false);
+impl_iterator!(RevIterator<'a>, (Vec<u8>, Vec<u8>), entry, true);
+impl_iterator!(KeyIterator<'a>, Vec<u8>, key, false);
+impl_iterator!(RevKeyIterator<'a>, Vec<u8>, key, true);
+impl_iterator!(ValueIterator<'a>, Vec<u8>, value, false);
+impl_iterator!(RevValueIterator<'a>, Vec<u8>, key, true);
