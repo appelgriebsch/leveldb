@@ -130,19 +130,29 @@ pub trait LevelDBIterator<'a> {
                 if self.key()[..].starts_with(k) {
                     return true;
                 }
-            } else if let Some(k) = self.to_key() {
-                // iterate until the 'to' key
-                let comparator: fn(&[u8], &[u8]) -> bool = if reverse {
-                    |a: &[u8], b: &[u8]| -> bool { a >= b }
-                } else {
-                    |a: &[u8], b: &[u8]| -> bool { a <= b }
-                };
-                if comparator(&self.key()[..], k) {
-                    return true;
-                }
             } else {
-                // if no conditions return we're valid
-                return true;
+                let from = if let Some(k) = self.from_key() {
+                    let comparator: fn(&[u8], &[u8]) -> bool = if reverse {
+                        |a: &[u8], b: &[u8]| -> bool { a <= b }
+                    } else {
+                        |a: &[u8], b: &[u8]| -> bool { a >= b }
+                    };
+                    comparator(&self.key()[..], k)
+                } else {
+                    true
+                };
+                let to = if let Some(k) = self.to_key() {
+                    let comparator: fn(&[u8], &[u8]) -> bool = if reverse {
+                        |a: &[u8], b: &[u8]| -> bool { a >= b }
+                    } else {
+                        |a: &[u8], b: &[u8]| -> bool { a <= b }
+                    };
+                    comparator(&self.key()[..], k)
+                } else {
+                    true
+                };
+
+                return from && to;
             }
         }
 
@@ -160,7 +170,15 @@ pub trait LevelDBIterator<'a> {
             if let Some(k) = self.prefix_key() {
                 self.seek(k)
             } else if let Some(k) = self.from_key() {
-                self.seek(k)
+                self.seek(k);
+                if !self.valid(reverse) && reverse {
+                    // if from doesn't exist we seeked past it so go back
+                    unsafe {
+                        self.advance_raw();
+                    }
+                } else {
+                    self.seek(k)
+                }
             }
             self.started();
         }
