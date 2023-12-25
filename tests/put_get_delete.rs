@@ -1,6 +1,4 @@
-mod utils;
-
-use utils::{open_database, temp_dir, db_put_simple};
+use crate::utils::{db_put_simple, open_database, temp_dir};
 use leveldb::options::{ReadOptions, WriteOptions};
 
 #[test]
@@ -32,8 +30,12 @@ fn test_get_from_empty_database() {
     let res = database.get(&read_opts, &1);
 
     match res {
-        Ok(data) => { assert!(data.is_none()) },
-        Err(_) => { panic!("failed reading data") }
+        Ok(data) => {
+            assert!(data.is_none())
+        }
+        Err(_) => {
+            panic!("failed reading data")
+        }
     }
 }
 
@@ -51,7 +53,9 @@ fn test_get_from_filled_database() {
             assert!(data.is_some());
             let data = data.unwrap();
             assert_eq!(data, vec!(1));
-        },
-        Err(_) => { panic!("failed reading data") }
+        }
+        Err(_) => {
+            panic!("failed reading data")
+        }
     }
 }

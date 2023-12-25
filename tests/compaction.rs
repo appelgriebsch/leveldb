@@ -1,6 +1,4 @@
-mod utils;
-
-use utils::{open_database, temp_dir, db_put_u8_simple};
+use crate::utils::{db_put_u8_simple, open_database, temp_dir};
 use leveldb::compaction::Compaction;
 
 #[test]

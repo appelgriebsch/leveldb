@@ -1,7 +1,6 @@
+use crate::utils::{open_database, temp_dir};
 use leveldb::management::*;
 use leveldb::options::*;
-mod utils;
-use utils::{open_database, temp_dir};
 
 #[test]
 fn test_destroy_database() {
@@ -26,4 +25,3 @@ fn test_repair_database() {
     let res = repair(tmp.path(), &options);
     assert!(res.is_ok());
 }
-

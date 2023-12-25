@@ -1,8 +1,7 @@
-mod utils;
-use utils::{open_database,temp_dir, db_put_simple, db_put_u8_simple};
+use crate::utils::{db_put_simple, db_put_u8_simple, open_database, temp_dir};
 use leveldb::iterator::Iterable;
 use leveldb::iterator::LevelDBIterator;
-use leveldb::options::{ReadOptions};
+use leveldb::options::ReadOptions;
 use leveldb::util::FromU8;
 
 #[test]
@@ -83,10 +82,9 @@ fn test_iterator_seek() {
 
     iter.seek(&[2]);
 
-    assert_eq!(iter.next().unwrap(), (vec![2],vec![2]));
-    assert_eq!(iter.next().unwrap(), (vec![3],vec![3]));
+    assert_eq!(iter.next().unwrap(), (vec![2], vec![2]));
+    assert_eq!(iter.next().unwrap(), (vec![3], vec![3]));
 }
-
 
 #[test]
 fn test_key_iterator() {
@@ -94,7 +92,6 @@ fn test_key_iterator() {
     let database = &mut open_database(tmp.path(), true);
     db_put_u8_simple(database, &[1], &[1]);
     db_put_u8_simple(database, &[2], &[2]);
-
 
     let read_opts = ReadOptions::new();
     let mut iter = database.keys_iter(&read_opts);
