@@ -41,12 +41,18 @@ impl Batch for Database {
                 &mut error,
             );
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 Ok(())
             } else {
                 Err(Error::new_from_char(error))
             }
         }
+    }
+}
+
+impl Default for WriteBatch {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -136,8 +142,8 @@ extern "C" fn put_callback<T: WriteBatchIterator>(
 ) {
     unsafe {
         let iter: &mut T = &mut *(state as *mut T);
-        let key_slice = slice::from_raw_parts::<u8>(key as *const u8, key_len as usize);
-        let val_slice = slice::from_raw_parts::<u8>(val as *const u8, val_len as usize);
+        let key_slice = slice::from_raw_parts::<u8>(key as *const u8, key_len);
+        let val_slice = slice::from_raw_parts::<u8>(val as *const u8, val_len);
 
         iter.put_u8(key_slice, val_slice);
     }
@@ -150,7 +156,7 @@ extern "C" fn deleted_callback<T: WriteBatchIterator>(
 ) {
     unsafe {
         let iter: &mut T = &mut *(state as *mut T);
-        let key_slice = slice::from_raw_parts::<u8>(key as *const u8, key_len as usize);
+        let key_slice = slice::from_raw_parts::<u8>(key as *const u8, key_len);
 
         iter.deleted_u8(key_slice);
     }

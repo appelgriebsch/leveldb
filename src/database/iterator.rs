@@ -119,6 +119,7 @@ pub trait LevelDBIterator<'a> {
     fn to(self, key: &'a [u8]) -> Self;
     fn prefix(self, key: &'a [u8]) -> Self;
 
+    #[allow(clippy::wrong_self_convention)]
     fn from_key(&self) -> Option<&'a [u8]>;
     fn to_key(&self) -> Option<&'a [u8]>;
     fn prefix_key(&self) -> Option<&'a [u8]>;
@@ -159,6 +160,7 @@ pub trait LevelDBIterator<'a> {
         false
     }
 
+    /// # Safety
     unsafe fn advance_raw(&mut self);
 
     fn advance(&mut self, reverse: bool) -> bool {

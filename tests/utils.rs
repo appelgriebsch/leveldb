@@ -24,7 +24,7 @@ pub fn db_put_u8_simple(database: &Database, key: &[u8], val: &[u8]) {
   let write_opts = WriteOptions::new();
 
   match database.put_u8(&write_opts, key, val) {
-    Ok(_) => { () },
+    Ok(_) => {  },
     Err(e) => { panic!("failed to write to database: {:?}", e) }
   }
 }
@@ -33,7 +33,7 @@ pub fn db_put_simple(database: &Database, key: &dyn IntoLevelDBKey, val: &[u8]) 
   let write_opts = WriteOptions::new();
 
   match database.put(&write_opts, key, val) {
-    Ok(_) => { () },
+    Ok(_) => {  },
     Err(e) => { panic!("failed to write to database: {:?}", e) }
   }
 }

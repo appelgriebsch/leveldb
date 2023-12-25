@@ -14,8 +14,8 @@ fn test_snapshots() {
 
     db_put_simple(database, &2, &[2]);
 
-    let mut read_opts = ReadOptions::new();
-    let res = snapshot.get(&mut read_opts, &2);
+    let read_opts = ReadOptions::new();
+    let res = snapshot.get(&read_opts, &2);
 
     assert!(res.is_ok());
     assert_eq!(None, res.unwrap());

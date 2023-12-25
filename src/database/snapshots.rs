@@ -69,7 +69,7 @@ impl<'a> Snapshot<'a> {
 
             leveldb_readoptions_destroy(c_readoptions);
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 let bytes_opt = Bytes::from_raw(result as *mut u8, length);
 
                 Ok(bytes_opt.map(|val| val.into()))

@@ -53,10 +53,7 @@ unsafe impl Send for Database {}
 
 impl Database {
     fn new(database: *mut leveldb_t, comparator: Option<*mut leveldb_comparator_t>) -> Database {
-        let raw_comp = match comparator {
-            Some(p) => Some(RawComparator { ptr: p }),
-            None => None,
-        };
+        let raw_comp = comparator.map(|p| RawComparator { ptr: p });
 
         Database {
             database: RawDB { ptr: database },
@@ -81,7 +78,7 @@ impl Database {
             );
             leveldb_options_destroy(c_options);
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 Ok(Database::new(db, None))
             } else {
                 Err(Error::new_from_char(error))
@@ -114,7 +111,7 @@ impl Database {
             );
             leveldb_options_destroy(c_options);
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 Ok(Database::new(db, Some(comp_ptr)))
             } else {
                 Err(Error::new_from_char(error))
@@ -148,7 +145,7 @@ impl Database {
 
             leveldb_writeoptions_destroy(c_writeoptions);
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 Ok(())
             } else {
                 Err(Error::new_from_char(error))
@@ -179,7 +176,7 @@ impl Database {
             );
             leveldb_readoptions_destroy(c_readoptions);
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 let bytes_opt = Bytes::from_raw(result as *mut u8, length);
 
                 Ok(bytes_opt.map(|val| val.into()))
@@ -196,7 +193,7 @@ impl Database {
     pub fn delete_u8(&self, options: &WriteOptions, key: &[u8]) -> Result<(), Error> {
         unsafe {
             let mut error = ptr::null_mut();
-            let c_writeoptions = c_writeoptions(&options);
+            let c_writeoptions = c_writeoptions(options);
 
             leveldb_delete(
                 self.database.ptr,
@@ -208,7 +205,7 @@ impl Database {
 
             leveldb_writeoptions_destroy(c_writeoptions);
 
-            if error == ptr::null_mut() {
+            if error.is_null() {
                 Ok(())
             } else {
                 Err(Error::new_from_char(error))

@@ -52,11 +52,11 @@ struct Iter {
 
 impl WriteBatchIterator for Iter {
     fn put_u8(&mut self, _key: &[u8], _value: &[u8]) {
-        self.put = self.put + 1;
+        self.put += 1;
     }
 
     fn deleted_u8(&mut self, _key: &[u8]) {
-        self.deleted = self.deleted + 1;
+        self.deleted += 1;
     }
 }
 

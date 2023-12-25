@@ -1,61 +1,48 @@
 use super::error::Error;
 
+pub type KeyFn<'a, T> = &'a dyn Fn(&[u8]) -> Result<T, Error>;
+
 pub trait IntoLevelDBKey {
-    fn as_u8_slice_for_write(&self, f: &dyn Fn(&[u8]) -> Result<(), Error>) -> Result<(), Error>;
-    fn as_u8_slice_for_get(
-        &self,
-        f: &dyn Fn(&[u8]) -> Result<Option<Vec<u8>>, Error>,
-    ) -> Result<Option<Vec<u8>>, Error>;
+    fn as_u8_slice_for_write(&self, f: KeyFn<()>) -> Result<(), Error>;
+    fn as_u8_slice_for_get(&self, f: KeyFn<Option<Vec<u8>>>) -> Result<Option<Vec<u8>>, Error>;
 }
 
 impl IntoLevelDBKey for &[u8] {
-    fn as_u8_slice_for_write(&self, f: &dyn Fn(&[u8]) -> Result<(), Error>) -> Result<(), Error> {
+    fn as_u8_slice_for_write(&self, f: KeyFn<()>) -> Result<(), Error> {
         f(self)
     }
 
-    fn as_u8_slice_for_get(
-        &self,
-        f: &dyn Fn(&[u8]) -> Result<Option<Vec<u8>>, Error>,
-    ) -> Result<Option<Vec<u8>>, Error> {
+    fn as_u8_slice_for_get(&self, f: KeyFn<Option<Vec<u8>>>) -> Result<Option<Vec<u8>>, Error> {
         f(self)
     }
 }
 
 impl IntoLevelDBKey for &str {
-    fn as_u8_slice_for_write(&self, f: &dyn Fn(&[u8]) -> Result<(), Error>) -> Result<(), Error> {
+    fn as_u8_slice_for_write(&self, f: KeyFn<()>) -> Result<(), Error> {
         f(self.as_bytes())
     }
 
-    fn as_u8_slice_for_get(
-        &self,
-        f: &dyn Fn(&[u8]) -> Result<Option<Vec<u8>>, Error>,
-    ) -> Result<Option<Vec<u8>>, Error> {
+    fn as_u8_slice_for_get(&self, f: KeyFn<Option<Vec<u8>>>) -> Result<Option<Vec<u8>>, Error> {
         f(self.as_bytes())
     }
 }
 
 impl IntoLevelDBKey for String {
-    fn as_u8_slice_for_write(&self, f: &dyn Fn(&[u8]) -> Result<(), Error>) -> Result<(), Error> {
+    fn as_u8_slice_for_write(&self, f: KeyFn<()>) -> Result<(), Error> {
         f(self.as_bytes())
     }
 
-    fn as_u8_slice_for_get(
-        &self,
-        f: &dyn Fn(&[u8]) -> Result<Option<Vec<u8>>, Error>,
-    ) -> Result<Option<Vec<u8>>, Error> {
+    fn as_u8_slice_for_get(&self, f: KeyFn<Option<Vec<u8>>>) -> Result<Option<Vec<u8>>, Error> {
         f(self.as_bytes())
     }
 }
 
 impl IntoLevelDBKey for Vec<u8> {
-    fn as_u8_slice_for_write(&self, f: &dyn Fn(&[u8]) -> Result<(), Error>) -> Result<(), Error> {
+    fn as_u8_slice_for_write(&self, f: KeyFn<()>) -> Result<(), Error> {
         f(self.as_slice())
     }
 
-    fn as_u8_slice_for_get(
-        &self,
-        f: &dyn Fn(&[u8]) -> Result<Option<Vec<u8>>, Error>,
-    ) -> Result<Option<Vec<u8>>, Error> {
+    fn as_u8_slice_for_get(&self, f: KeyFn<Option<Vec<u8>>>) -> Result<Option<Vec<u8>>, Error> {
         f(self.as_slice())
     }
 }
@@ -63,16 +50,13 @@ impl IntoLevelDBKey for Vec<u8> {
 macro_rules! impl_into_level_db_key_for_integer {
     ($T: ty) => {
         impl IntoLevelDBKey for $T {
-            fn as_u8_slice_for_write(
-                &self,
-                f: &dyn Fn(&[u8]) -> Result<(), Error>,
-            ) -> Result<(), Error> {
+            fn as_u8_slice_for_write(&self, f: KeyFn<()>) -> Result<(), Error> {
                 f(&self.to_be_bytes()[..])
             }
 
             fn as_u8_slice_for_get(
                 &self,
-                f: &dyn Fn(&[u8]) -> Result<Option<Vec<u8>>, Error>,
+                f: KeyFn<Option<Vec<u8>>>,
             ) -> Result<Option<Vec<u8>>, Error> {
                 f(&self.to_be_bytes()[..])
             }

@@ -65,6 +65,12 @@ impl std::fmt::Debug for Options {
     }
 }
 
+impl Default for Options {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Options {
     /// Create a new `Options` struct with default settings.
     pub fn new() -> Options {
@@ -91,6 +97,12 @@ pub struct WriteOptions {
     pub sync: bool,
 }
 
+impl Default for WriteOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WriteOptions {
     /// Return a new `WriteOptions` struct with default settings.
     pub fn new() -> WriteOptions {
@@ -112,6 +124,12 @@ pub struct ReadOptions {
     pub fill_cache: bool,
 }
 
+impl Default for ReadOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ReadOptions {
     /// Return a `ReadOptions` struct with the default values.
     pub fn new() -> ReadOptions {
@@ -123,6 +141,7 @@ impl ReadOptions {
 }
 
 #[allow(missing_docs)]
+/// # Safety
 pub unsafe fn c_options(
     options: &Options,
     comparator: Option<*mut leveldb_comparator_t>,
@@ -154,6 +173,7 @@ pub unsafe fn c_options(
 }
 
 #[allow(missing_docs)]
+/// # Safety
 pub unsafe fn c_writeoptions(options: &WriteOptions) -> *mut leveldb_writeoptions_t {
     let c_writeoptions = leveldb_writeoptions_create();
     leveldb_writeoptions_set_sync(c_writeoptions, options.sync as u8);
@@ -161,6 +181,7 @@ pub unsafe fn c_writeoptions(options: &WriteOptions) -> *mut leveldb_writeoption
 }
 
 #[allow(missing_docs)]
+/// # Safety
 pub unsafe fn c_readoptions(options: &ReadOptions) -> *mut leveldb_readoptions_t {
     let c_readoptions = leveldb_readoptions_create();
     leveldb_readoptions_set_verify_checksums(c_readoptions, options.verify_checksums as u8);

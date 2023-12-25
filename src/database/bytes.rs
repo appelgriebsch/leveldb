@@ -17,23 +17,27 @@ impl Bytes {
     /// Creates instance of `Bytes` from leveldb-allocated data.
     ///
     /// Returns `None` if `ptr` is `null`.
+    ///
+    /// # Safety
     pub unsafe fn from_raw(ptr: *mut u8, size: usize) -> Option<Self> {
         if ptr.is_null() {
             None
         } else {
             Some(Bytes {
                 bytes: &mut *ptr,
-                size: size,
+                size,
                 _marker: Default::default(),
             })
         }
     }
 
     /// Creates instance of `Bytes` from leveldb-allocated data without null checking.
+    ///
+    /// # Safety
     pub unsafe fn from_raw_unchecked(ptr: *mut u8, size: usize) -> Self {
         Bytes {
             bytes: &mut *ptr,
-            size: size,
+            size,
             _marker: Default::default(),
         }
     }
@@ -65,7 +69,7 @@ impl std::ops::DerefMut for Bytes {
 
 impl std::borrow::Borrow<[u8]> for Bytes {
     fn borrow(&self) -> &[u8] {
-        &*self
+        self
     }
 }
 
@@ -77,7 +81,7 @@ impl std::borrow::BorrowMut<[u8]> for Bytes {
 
 impl AsRef<[u8]> for Bytes {
     fn as_ref(&self) -> &[u8] {
-        &*self
+        self
     }
 }
 
