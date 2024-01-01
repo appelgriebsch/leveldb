@@ -5,7 +5,7 @@
 use cruzbit_leveldb_sys::*;
 
 use super::bytes::Bytes;
-use super::db::Database;
+use super::db::{Database, DatabaseReader};
 use super::error::Error;
 use super::iterator::{Iterable, Iterator, KeyIterator, ValueIterator};
 use super::key::IntoLevelDBKey;
@@ -122,5 +122,23 @@ impl<'a> Iterable<'a> for Snapshot<'a> {
 
     fn value_iter(&'a self, options: &ReadOptions) -> ValueIterator<'a> {
         ValueIterator::new(self.database, options, Some(self))
+    }
+}
+
+impl DatabaseReader for Snapshot<'_> {
+    fn get(
+        &self,
+        options: &ReadOptions,
+        key: &dyn IntoLevelDBKey,
+    ) -> Result<Option<Vec<u8>>, Error> {
+        self.get(options, key)
+    }
+
+    fn get_u8(
+        &self,
+        options: &ReadOptions,
+        key: &[u8],
+    ) -> Result<Option<Vec<u8>>, Error> {
+        self.get_u8(options, key)
     }
 }

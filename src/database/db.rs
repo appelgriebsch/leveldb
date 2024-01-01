@@ -213,3 +213,36 @@ impl Database {
         }
     }
 }
+
+/// Helpful when building interfaces that read from either DB or Snapshot
+pub trait DatabaseReader {
+    fn get(
+        &self,
+        options: &ReadOptions,
+        key: &dyn IntoLevelDBKey,
+    ) -> Result<Option<Vec<u8>>, Error>;
+
+    fn get_u8(
+        &self,
+        options: &ReadOptions,
+        key: &[u8],
+    ) -> Result<Option<Vec<u8>>, Error>;
+}
+
+impl DatabaseReader for Database {
+    fn get(
+        &self,
+        options: &ReadOptions,
+        key: &dyn IntoLevelDBKey,
+    ) -> Result<Option<Vec<u8>>, Error> {
+        self.get(options, key)
+    }
+
+    fn get_u8(
+        &self,
+        options: &ReadOptions,
+        key: &[u8],
+    ) -> Result<Option<Vec<u8>>, Error> {
+        self.get_u8(options, key)
+    }
+}

@@ -12,4 +12,4 @@ pub mod options;
 pub mod snapshots;
 pub mod util;
 
-pub use db::Database;
+pub use db::{Database, DatabaseReader};
