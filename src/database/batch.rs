@@ -2,7 +2,7 @@ use super::db::Database;
 use super::error::Error;
 use super::key::IntoLevelDBKey;
 use super::options::{c_writeoptions, WriteOptions};
-use cruzbit_leveldb_sys::*;
+use leveldb_sys::*;
 use libc::{c_char, c_void, size_t};
 use std::{ptr, slice};
 

@@ -1,13 +1,13 @@
 [package]
-name = "cruzbit-leveldb"
-version = "1.0.0"
-authors = [ "Christian Smith <christian@dhp.com" ]
+name = "leveldb"
+version = "1.0.1"
+authors = [ "Andreas Gerlach <andi@appelgriebsch.com>" ]
 edition = "2021"
 rust-version = "1.57.0"
 description = "An interface for leveldb"
 readme = "README.md"
-homepage = "https://github.com/christian-smith/cruzbit-leveldb"
-repository = "https://github.com/christian-smith/cruzbit-leveldb"
+homepage = "https://github.com/appelgriebsch/leveldb"
+repository = "https://github.com/appelgriebsch/leveldb"
 license = "MIT"
 autotests = false
 
@@ -18,12 +18,11 @@ name = "leveldb"
 name = "tests"
 
 [features]
-default = ["cruzbit-leveldb-sys/snappy"]
+default = ["leveldb-sys/snappy"]
 
 [dependencies]
 libc = "0.2"
-cruzbit-leveldb-sys = "1.0"
+leveldb-sys = { git = "https://github.com/appelgriebsch/leveldb-sys", tag = "v1.0.1" }
 
 [dev-dependencies]
 tempdir = "0.3"
-

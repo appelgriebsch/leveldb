@@ -1,5 +1,5 @@
 use super::Database;
-use cruzbit_leveldb_sys::leveldb_compact_range;
+use leveldb_sys::leveldb_compact_range;
 use libc::{c_char, size_t};
 
 pub trait Compaction<'a> {

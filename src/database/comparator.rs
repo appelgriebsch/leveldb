@@ -4,7 +4,7 @@
 //! Comparators allow to override this comparison.
 //! The ordering of keys introduced by the comparator influences iteration order.
 //! Databases written with one Comparator cannot be opened with another.
-use cruzbit_leveldb_sys::*;
+use leveldb_sys::*;
 use libc::{c_char, c_void, size_t};
 use std::cmp::Ordering;
 use std::slice;

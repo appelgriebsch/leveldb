@@ -48,7 +48,7 @@ impl Drop for Bytes {
         unsafe {
             use libc::c_void;
 
-            cruzbit_leveldb_sys::leveldb_free(self.bytes as *mut u8 as *mut c_void);
+            leveldb_sys::leveldb_free(self.bytes as *mut u8 as *mut c_void);
         }
     }
 }

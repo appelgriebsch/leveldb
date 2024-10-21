@@ -3,7 +3,7 @@ use super::comparator::{create_comparator, Comparator};
 use super::error::Error;
 use super::key::IntoLevelDBKey;
 use super::options::*;
-use cruzbit_leveldb_sys::*;
+use leveldb_sys::*;
 use libc::{c_char, size_t};
 use std::ffi::CString;
 use std::path::Path;

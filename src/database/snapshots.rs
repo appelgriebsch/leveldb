@@ -2,7 +2,7 @@
 //!
 //! Snapshots give you a reference to the database at a certain
 //! point in time and won't change while you work with them.
-use cruzbit_leveldb_sys::*;
+use leveldb_sys::*;
 
 use super::bytes::Bytes;
 use super::db::{Database, DatabaseReader};

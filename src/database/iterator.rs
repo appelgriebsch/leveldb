@@ -5,7 +5,7 @@
 use super::options::{c_readoptions, ReadOptions};
 use super::Database;
 use crate::database::snapshots::Snapshot;
-use cruzbit_leveldb_sys::*;
+use leveldb_sys::*;
 use libc::{c_char, size_t};
 use std::iter;
 use std::marker::PhantomData;
