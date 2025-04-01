@@ -1,6 +1,6 @@
 [package]
 name = "leveldb"
-version = "1.0.1"
+version = "1.0.2"
 authors = [ "Andreas Gerlach <andi@appelgriebsch.com>" ]
 edition = "2021"
 rust-version = "1.57.0"
@@ -22,7 +22,7 @@ default = ["leveldb-sys/snappy"]
 
 [dependencies]
 libc = "0.2"
-leveldb-sys = { git = "https://github.com/appelgriebsch/leveldb-sys", tag = "v1.0.1" }
+leveldb-sys = { git = "https://github.com/appelgriebsch/leveldb-sys", tag = "v1.0.2" }
 
 [dev-dependencies]
 tempdir = "0.3"
